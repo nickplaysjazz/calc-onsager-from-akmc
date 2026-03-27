@@ -79,6 +79,88 @@ def get_five_jump_frequencies(settings, pairwise):
     return five_jump_freq, F
 
 
+def get_interstitial_dilute_jump_frequencies(settings, pairwise):
+    """Tucker, Najafabadi, Allen, Morgan, JNM, 2010"""
+    interstitial_dilute_energy = {}
+
+    # AA jump to NN
+    interstitial_dilute_energy["e0"] = (
+        settings["saddle_a_aa"] - 12 * pairwise["eps_a,aa"] - 11 * pairwise["eps_aa"]
+    )
+    # AB jump to NN
+    interstitial_dilute_energy["eI"] = (
+        settings["saddle_a_ab"] - 12 * pairwise["eps_a,ab"] - 11 * pairwise["eps_aa"]
+    )
+    # AA rotation
+    interstitial_dilute_energy["eR0"] = 0.05
+    # AB rotation
+    interstitial_dilute_energy["eR"] = 0.05
+    # AA+B->A+AB
+    interstitial_dilute_energy["e2p"] = (
+        settings["saddle_b_aa"]
+        - 11 * pairwise["eps_a,aa"]
+        - 1 * pairwise["eps_b,aa"]
+        - 11 * pairwise["eps_ab"]
+    )
+    # A+AB->B+AA
+    interstitial_dilute_energy["e2"] = (
+        settings["saddle_a_ab"] - 12 * pairwise["eps_a,ab"] - 11 * pairwise["eps_aa"]
+    )
+    # AA+A->A+AA, B 1NN to AA,A
+    interstitial_dilute_energy["e1"] = (
+        settings["saddle_a_aa"]
+        - 1 * pairwise["eps_b,aa"]
+        - 11 * pairwise["eps_a,aa"]
+        - 1 * pairwise["eps_ab"]
+        - 10 * pairwise["eps_aa"]
+    )
+    # AA+A->A+AA, B 1NN to AA initially
+    interstitial_dilute_energy["e3"] = (
+        settings["saddle_a_aa"]
+        - 1 * pairwise["eps_b,aa"]
+        - 11 * pairwise["eps_a,aa"]
+        - 11 * pairwise["eps_aa"]
+    )
+    # AA+A->A+AA, B 1NN to A initially
+    interstitial_dilute_energy["e4"] = (
+        settings["saddle_a_aa"]
+        - 12 * pairwise["eps_a,aa"]
+        - 1 * pairwise["eps_ab"]
+        - 10 * pairwise["eps_aa"]
+    )
+    # AA+A->A+AA, B 1NN to AA,A; initial/final rotated by 90 deg
+    interstitial_dilute_energy["e1p"] = (
+        settings["saddle_a_aa"]
+        - 1 * pairwise["eps_b,aa"]
+        - 11 * pairwise["eps_a,aa"]
+        - 1 * pairwise["eps_ab"]
+        - 10 * pairwise["eps_aa"]
+    )
+    # AA+A->A+AA, B 1NN to AA inetially; initial/final rotated by 90 deg
+    interstitial_dilute_energy["e3p"] = (
+        settings["saddle_a_aa"]
+        - 1 * pairwise["eps_b,aa"]
+        - 11 * pairwise["eps_a,aa"]
+        - 11 * pairwise["eps_aa"]
+    )
+    # AA+A->A+AA, B 1NN to A inieially; initial/final rotated by 90 deg
+    interstitial_dilute_energy["e4p"] = (
+        settings["saddle_a_aa"]
+        - 12 * pairwise["eps_a,aa"]
+        - 1 * pairwise["eps_ab"]
+        - 10 * pairwise["eps_aa"]
+    )
+
+    interstitial_dilute_freq = {}
+    for k in interstitial_dilute_energy:
+        new_k = "w" + k.strip("e")
+        interstitial_dilute_freq[new_k] = settings["att_freq"] * math.exp(
+            -interstitial_dilute_energy[k] / settings["kt"]
+        )
+
+    return interstitial_dilute_freq
+
+
 def calc_vacancy_onsager_coeff(settings, five_jump_model, five_jump_F_factor, vac_conc):
     """Tucker, Najafabadi, Allen, Morgan, JNM, 2010"""
     n = 1  # number of lattice sites
@@ -115,8 +197,6 @@ def calc_vacancy_onsager_coeff(settings, five_jump_model, five_jump_F_factor, va
         )
     ) / omega
 
-    print(bv_pair_conc)
-
     onsager_coeff_vac = {}
     onsager_coeff_vac["l_aa_v"] = (((n) * s**2) / 6) * (
         12 * vac_conc * (1 - 7 * settings["solute_composition"]) * w0
@@ -140,6 +220,81 @@ def calc_vacancy_onsager_coeff(settings, five_jump_model, five_jump_F_factor, va
     )
 
     norm_onsager_coeff_vac = {k: (v / vac_conc) for k, v in onsager_coeff_vac.items()}
+
+    return norm_onsager_coeff_vac
+
+
+def calc_interstitial_onsager_coeff(
+    settings, pairwise, interstitial_dilute_frequencies, int_conc
+):
+    """Tucker, Najafabadi, Allen, Morgan, JNM, 2010"""
+    n = 1  # number of lattice sites; this is 1 for FCC materials even for interstitials
+    s = settings["lattice_param"] * math.sqrt(2) / 2  # nn jump distance for fcc
+
+    aa_b_binding = (
+        pairwise["eps_a,aa"]
+        - pairwise["eps_aa"]
+        - pairwise["eps_b,aa"]
+        + pairwise["eps_ab"]
+    )
+    bi_pair_conc = (
+        8
+        * int_conc
+        * settings["solute_composition"]
+        * math.exp(aa_b_binding / settings["kt"])
+    )
+    a_type_bi_pair_conc = (
+        bi_pair_conc  # Assume all orientations are equally available for nn jumps
+    )
+
+    w0 = interstitial_dilute_frequencies["w0"]
+    wI = interstitial_dilute_frequencies["wI"]
+    wR0 = interstitial_dilute_frequencies["wR0"]
+    wR = interstitial_dilute_frequencies["wR"]
+    w2p = interstitial_dilute_frequencies["w2p"]
+    w2 = interstitial_dilute_frequencies["w2"]
+    w1 = interstitial_dilute_frequencies["w1"]
+    w3 = interstitial_dilute_frequencies["w3"]
+    w4 = interstitial_dilute_frequencies["w4"]
+    w1p = interstitial_dilute_frequencies["w1p"]
+    w3p = interstitial_dilute_frequencies["w3p"]
+    w4p = interstitial_dilute_frequencies["w4p"]
+
+    A = (wR + wI) * (5 * w3 + w2p) + 5 * w3 * w2
+    L_AA_f = (4 * n * s**2 * int_conc * w0) / 3
+    L_AA_p = ((n * s**2 * a_type_bi_pair_conc * w3) / 6) * (
+        (-7 * w0 / w4)
+        + (16 * (w3 + 2 * w1 + w2p) / (5 * w3 + 2 * w1 + w2p))
+        + (
+            (12 * (wR + wI) * (2 * w3 + w2p) + 2 * w3 * w2)
+            / ((wR + wI) * (5 * w3 + w2p) + 5 * w3 * w2)
+        )
+        + (6 * w4p * (w3p + 2 * w1p) / (w4 * (2 * w3p + w1p)))
+    )
+
+    onsager_coeff_int = {}
+    onsager_coeff_int["l_aa_i"] = L_AA_f + L_AA_p
+    onsager_coeff_int["l_ab_i"] = (n * s**2 * a_type_bi_pair_conc / 6) * (
+        6 * wI * w2p * w3 / A
+    )
+    onsager_coeff_int["l_bb_i"] = (
+        (n * s**2 * a_type_bi_pair_conc / 6)
+        * ((w2p * wI) / (w2 * A))
+        * (wR * (5 * w3 + w2p) + 5 * w3 * w2)
+    )
+    onsager_coeff_int["l_ai_i"] = (
+        onsager_coeff_int["l_aa_i"] + onsager_coeff_int["l_ab_i"]
+    )
+    onsager_coeff_int["l_bi_i"] = (
+        onsager_coeff_int["l_bb_i"] + onsager_coeff_int["l_ab_i"]
+    )
+    onsager_coeff_int["l_ii_i"] = (
+        onsager_coeff_int["l_aa_i"]
+        + 2 * onsager_coeff_int["l_ab_i"]
+        + onsager_coeff_int["l_bb_i"]
+    )
+
+    norm_onsager_coeff_vac = {k: (v / int_conc) for k, v in onsager_coeff_int.items()}
 
     return norm_onsager_coeff_vac
 
@@ -169,8 +324,14 @@ def main():
         settings, five_jump_model, five_jump_F_factor, eq_vac_conc
     )
 
-    for key in norm_onsager_coeff_vac:
-        print(key, norm_onsager_coeff_vac[key])
+    interstitial_jumps = get_interstitial_dilute_jump_frequencies(settings, pairwise)
+
+    norm_onsager_coeff_int = calc_interstitial_onsager_coeff(
+        settings, pairwise, interstitial_jumps, eq_int_conc
+    )
+
+    for key in norm_onsager_coeff_int:
+        print(key, norm_onsager_coeff_int[key])
 
 
 if __name__ == "__main__":
