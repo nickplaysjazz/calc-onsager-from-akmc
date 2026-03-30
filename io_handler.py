@@ -1,4 +1,5 @@
 import configparser
+import csv
 import os
 
 from pathlib import Path
@@ -105,3 +106,25 @@ def validate_config(raw_data, schema):
             )
 
     return validated
+
+def read_csv(filename):
+    BASE_DIR = Path(__file__).resolve().parent
+    config_path = BASE_DIR / filename
+
+    if not os.path.isfile(config_path):
+        raise_error(
+            Path(__file__).name, f"Configuration file {filename} does not exist."
+        )
+
+    temp = []
+    B_conc = []
+    pd_conc = []
+    with open(filename, mode='r') as file:
+        csv_file = csv.DictReader(file)
+        for lines in csv_file:
+            boltzmann = 8.617e-5 # eV/K
+            temp.append(float(lines['Temperature (K)']) * boltzmann)
+            B_conc.append(int(lines['Number B'])/int(lines['System Size']))
+            pd_conc.append(1/int(lines['System Size']))
+    
+    return temp, B_conc, pd_conc 

@@ -13,6 +13,7 @@ expected_options = {
     "dim2": int,
     "dim3": int,
     "sink_type": SinkGeometry,
+    "dpa_rate": float,
     "ordering_ab": float,
     "cohesive_aa": float,
     "cohesive_bb": float,
