@@ -298,13 +298,19 @@ def calc_interstitial_onsager_coeff(
 
     return norm_onsager_coeff_vac
 
+
 def get_point_defect_conc(settings, eq_vac_conc, eq_int_conc, D_v, D_i):
     s = settings["lattice_param"] * math.sqrt(2) / 2  # nn jump distance for fcc
 
-    vac_conc = eq_vac_conc + (settings['dim1'] * s)**2 * settings['dpa_rate'] / (12 * D_v)
-    int_conc = eq_int_conc + (settings['dim1'] * s)**2 * settings['dpa_rate'] / (12 * D_i)
+    vac_conc = eq_vac_conc + (settings["dim1"] * s) ** 2 * settings["dpa_rate"] / (
+        12 * D_v
+    )
+    int_conc = eq_int_conc + (settings["dim1"] * s) ** 2 * settings["dpa_rate"] / (
+        12 * D_i
+    )
 
     return vac_conc, int_conc
+
 
 def main():
     # Read in values from settings.ini
@@ -326,30 +332,42 @@ def main():
     pairwise = get_pairwise_interactions(settings)
 
     for t in range(len(temp)):
-        settings['kt'] = temp[t]
+        settings["kt"] = temp[t]
         settings["solute_composition"] = B_conc[t]
 
         eq_vac_conc = math.exp(-settings["vac_for_a"] / settings["kt"])
         eq_int_conc = math.exp(-settings["int_aa_for_a"] / settings["kt"])
 
-        five_jump_model, five_jump_F_factor = get_five_jump_frequencies(settings, pairwise)
+        five_jump_model, five_jump_F_factor = get_five_jump_frequencies(
+            settings, pairwise
+        )
 
         norm_onsager_coeff_vac = calc_vacancy_onsager_coeff(
             settings, five_jump_model, five_jump_F_factor, eq_vac_conc
         )
 
-        interstitial_jumps = get_interstitial_dilute_jump_frequencies(settings, pairwise)
+        interstitial_jumps = get_interstitial_dilute_jump_frequencies(
+            settings, pairwise
+        )
 
         norm_onsager_coeff_int = calc_interstitial_onsager_coeff(
             settings, pairwise, interstitial_jumps, eq_int_conc
         )
 
-        vac_conc, int_conc = get_point_defect_conc(settings, eq_vac_conc, eq_int_conc, norm_onsager_coeff_vac['l_vv_v'], norm_onsager_coeff_int['l_ii_i'])
+        vac_conc, int_conc = get_point_defect_conc(
+            settings,
+            eq_vac_conc,
+            eq_int_conc,
+            norm_onsager_coeff_vac["l_vv_v"],
+            norm_onsager_coeff_int["l_ii_i"],
+        )
 
         onsager_vac = {k: (v * vac_conc) for k, v in norm_onsager_coeff_vac.items()}
         onsager_int = {k: (v * int_conc) for k, v in norm_onsager_coeff_int.items()}
 
-        ris_alpha_sign_factor = (onsager_vac['l_bv_v']/onsager_vac['l_av_v']) - (onsager_int['l_bi_i']/onsager_int['l_ai_i'])
+        ris_alpha_sign_factor = (onsager_vac["l_bv_v"] / onsager_vac["l_av_v"]) - (
+            onsager_int["l_bi_i"] / onsager_int["l_ai_i"]
+        )
 
         print(B_conc[t], ris_alpha_sign_factor)
 
