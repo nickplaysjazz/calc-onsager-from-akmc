@@ -315,10 +315,7 @@ def get_point_defect_conc(settings, eq_vac_conc, eq_int_conc, D_v, D_i):
 def main():
     # Read in values from settings.ini
     settings = read_settings("settings.ini", expected_options)
-
-    # Read in csv for composition and temperature
-    temp, B_conc, pd_conc = read_csv("spencer_values.csv")
-
+    
     # Throw error for things not yet implemented
     if (
         settings["sink_type"] == SinkGeometry.BULK
@@ -328,6 +325,14 @@ def main():
             Path(__file__).name,
             f"Sink geometry {settings["sink_type"]} not implemented!",
         )
+
+
+    #----------------------------------------------------------------------------------
+    # EDIT BELOW
+
+    # EXAMPLE OVERRIDING VALUES WITH CSV VALUES
+    # Override solute concentration and temperature with values read in from a .csv file
+    temp, B_conc, pd_conc = read_csv("example.csv")
 
     pairwise = get_pairwise_interactions(settings)
 
@@ -368,6 +373,7 @@ def main():
         ris_alpha_sign_factor = (onsager_vac["l_bv_v"] / onsager_vac["l_av_v"]) - (
             onsager_int["l_bi_i"] / onsager_int["l_ai_i"]
         )
+
 
         print(B_conc[t], ris_alpha_sign_factor)
 
