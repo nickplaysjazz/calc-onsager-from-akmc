@@ -125,7 +125,9 @@ def read_csv(filename):
         for lines in csv_file:
             boltzmann = 8.617e-5  # eV/K
             temp.append(float(lines["Temperature (K)"]) * boltzmann)
-            B_conc.append(int(lines["Number of B atoms"]) / int(lines["Number of Atoms"]))
+            B_conc.append(
+                int(lines["Number of B atoms"]) / int(lines["Number of Atoms"])
+            )
             pd_conc.append(1 / int(lines["Number of Atoms"]))
 
     return temp, B_conc, pd_conc

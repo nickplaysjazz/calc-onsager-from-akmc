@@ -315,7 +315,7 @@ def get_point_defect_conc(settings, eq_vac_conc, eq_int_conc, D_v, D_i):
 def main():
     # Read in values from settings.ini
     settings = read_settings("settings.ini", expected_options)
-    
+
     # Throw error for things not yet implemented
     if (
         settings["sink_type"] == SinkGeometry.BULK
@@ -326,8 +326,7 @@ def main():
             f"Sink geometry {settings["sink_type"]} not implemented!",
         )
 
-
-    #----------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------
     # EDIT BELOW
 
     # EXAMPLE OVERRIDING VALUES WITH CSV VALUES
@@ -373,7 +372,6 @@ def main():
         ris_alpha_sign_factor = (onsager_vac["l_bv_v"] / onsager_vac["l_av_v"]) - (
             onsager_int["l_bi_i"] / onsager_int["l_ai_i"]
         )
-
 
         print(B_conc[t], ris_alpha_sign_factor)
 

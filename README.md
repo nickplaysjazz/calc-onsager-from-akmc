@@ -30,7 +30,7 @@ First, create a virtual environment:
 python -m venv onsager-calc
 ```
 
-Activate the virtual environment with `source onsager-calc/Scripts/activate` or `source onsager-calc/bin/activate` depending on your OS. (You can deactivate the virtual environment with `deactive`.)
+Activate the virtual environment with `source onsager-calc/Scripts/activate` or `source onsager-calc/bin/activate` depending on your OS. (You can deactivate the virtual environment with `deactivate`.)
 
 
 Then install necessary python packages:
